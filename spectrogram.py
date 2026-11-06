@@ -48,11 +48,18 @@ def main():
     fig.colorbar(image, ax=ax, format="%+2.0f dB", label="Magnitude relative to peak")
     output = args.output or Path("outputs") / f"{args.song.stem}_spectrogram.png"
     output.parent.mkdir(parents=True, exist_ok=True)
+    # Preserve complex coefficients and settings for faithful inverse STFT.
+    archive = output.with_suffix(".npz")
+    np.savez_compressed(
+        archive, stft=stft, sample_rate=sample_rate, length=len(audio),
+        n_fft=args.n_fft, hop_length=args.hop_length, window="hann", center=True,
+    )
     fig.savefig(output, dpi=160, format="png")
     plt.close(fig)
     print(f"Audio: {sample_rate} Hz, {len(audio) / sample_rate:.2f} seconds (mono)")
     print(f"STFT: {stft.shape[0]} frequency bins × {stft.shape[1]} time frames")
     print(f"Saved: {output.resolve()}")
+    print(f"STFT data: {archive.resolve()}")
 
 
 if __name__ == "__main__":
